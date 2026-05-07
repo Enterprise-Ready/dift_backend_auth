@@ -1,0 +1,104 @@
+version: "3.9"
+
+services:
+
+  # ── Auth Engine ──────────────────────────────────────────────────────────────
+  auth-engine:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    container_name: auth-engine
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_PORT=8080
+      - SERVER_MODE=release
+      - DATABASE_DSN=host=postgres user=auth password=secret dbname=auth_engine port=5432 sslmode=disable TimeZone=UTC
+      - REDIS_ADDR=redis:6379
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./configs:/app/configs:ro
+      - ./models:/app/models:ro
+      - ./data:/app/data
+    networks:
+      - auth-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: auth-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: auth
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: auth_engine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deployments/migrations.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      - auth-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth -d auth_engine"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ─────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: auth-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --requirepass ""
+    volumes:
+      - redis_data:/data
+    networks:
+      - auth-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── PgAdmin (dev only) ────────────────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: auth-pgadmin
+    restart: unless-stopped
+    profiles: ["dev"]
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@local.dev
+      PGADMIN_DEFAULT_PASSWORD: admin
+    networks:
+      - auth-net
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  auth-net:
+    driver: bridge

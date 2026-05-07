@@ -1,0 +1,33 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+
+# Config with secrets
+configs/config.local.yaml
+.env
+*.pem
+*.key
+*.p8
+firebase-service-account.json
+
+# Build artifacts
+coverage.out
+*.test
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Face model data
+models/
+data/faces/
+
+# Go
+vendor/

@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package identity;
+
+option go_package = "proto/pb/identity;identitypb";
+
+service IdentityService {
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse);
+  rpc CreateEmailUser(CreateEmailUserRequest) returns (UserResponse);
+  rpc GetUserRoles(GetUserRolesRequest) returns (GetUserRolesResponse);
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message CreateEmailUserRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message GetUserRolesRequest {
+  string user_id = 1;
+}
+
+message GetUserRolesResponse {
+  repeated Role roles = 1;
+}
+
+message Role {
+  string name = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  string phone = 4;
+  string password = 5;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}
