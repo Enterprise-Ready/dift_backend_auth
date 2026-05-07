@@ -1,0 +1,23 @@
+# Global ignores
+.git
+.gitignore
+.vscode
+.idea
+*.log
+*.tmp
+*.swp
+
+# Go
+bin/
+coverage/
+*.out
+
+# Runtime / local env
+.env
+.env.*
+
+# Docs and local scripts
+README.md
+INSTALL.md
+k8s/
+docker/

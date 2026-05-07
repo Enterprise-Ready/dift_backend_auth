@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info: { title: Access Control Service API, version: 1.0.0 }
+paths:
+  /v1/roles:
+    post: { summary: Create role }
+    get: { summary: List roles }
+  /v1/users/{userID}/permissions/{permission}:
+    get: { summary: Check permission }
